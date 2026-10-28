@@ -1,0 +1,55 @@
+name: Deploy Hoor Game to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build static game site
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+          cp public/Hoor-Plays-Learns-Android.html _site/index.html
+          cp public/manifest.webmanifest _site/manifest.webmanifest
+          cp public/icon.svg _site/icon.svg
+          cp public/apple-touch-icon.png _site/apple-touch-icon.png
+          cp public/pwa-192x192.png _site/pwa-192x192.png
+          cp public/pwa-512x512.png _site/pwa-512x512.png
+          cp public/pwa-maskable-512x512.png _site/pwa-maskable-512x512.png
+          cp public/robots.txt _site/robots.txt
+          cp _site/index.html _site/404.html
+          touch _site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
