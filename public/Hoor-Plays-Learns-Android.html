@@ -790,6 +790,15 @@
 
       <div id="quizModalHikmah" class="hidden mt-4 p-4 rounded-2xl bg-emerald-950/80 border border-emerald-400/50 text-right text-xs md:text-sm text-emerald-100 leading-relaxed"></div>
 
+      <div id="stageCompletionGate" class="hidden mt-4 rounded-2xl border border-slate-600 bg-slate-800/80 p-4 text-right text-xs leading-relaxed">
+        <div class="font-extrabold text-amber-300 mb-2">إتمام المرحلة قبل الانتقال</div>
+        <div id="stageGateQuiz" class="text-slate-300">السؤال: لم تتم الإجابة بعد</div>
+        <div id="stageGateQuran" class="text-slate-300 mt-1">التلاوة: يجب الاستماع حتى النهاية</div>
+        <button id="stageGateListenBtn" onclick="toggleQuranAudio()" type="button" class="w-full mt-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold">
+          تشغيل التلاوة المطلوبة
+        </button>
+      </div>
+
       <button id="quizModalContinueBtn" onclick="closeQuizStation()"
         class="hidden w-full mt-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-extrabold text-sm shadow-lg">
         ✨ متابعة المغامرة واستلام المكافأة
@@ -1201,6 +1210,14 @@
       document.getElementById('soundBtn').textContent = audioEnabled ? '🔊 الصوت' : '🔇 صامت';
     }
 
+    function markQuranListened() {
+      stageProgress.quranListened = true;
+      const statusEl = document.getElementById('miniQuranStatus');
+      if (statusEl) statusEl.textContent = 'تم الاستماع';
+      updateStageCompletionGate();
+      saveAppState();
+    }
+
     function toggleQuranAudio(customUrl) {
       const player = document.getElementById('quranAudioPlayer');
       const statusEl = document.getElementById('miniQuranStatus');
@@ -1208,17 +1225,20 @@
 
       if (!player.paused && (!customUrl || player.src === customUrl)) {
         player.pause();
-        statusEl.textContent = 'متوقف';
+        statusEl.textContent = 'متوقف مؤقتاً';
       } else {
+        if (customUrl && player.src !== customUrl) player.currentTime = 0;
         player.src = selectedUrl;
         player.play().then(() => {
-          statusEl.textContent = '🌿 يتلو الآن...';
+          statusEl.textContent = 'يتم الاستماع...';
         }).catch(() => {
-          statusEl.textContent = '⚠️ وضع عدم الاتصال';
+          statusEl.textContent = 'تعذر التشغيل — تحقق من الاتصال';
           playSfx('powerup');
         });
       }
     }
+
+    document.getElementById('quranAudioPlayer').addEventListener('ended', markQuranListened);
 
     /*************************************************************************
      * و. محرك الأركيد الكلاسيكي (Chicken Invaders + Bosses + Stage 21 & 22)
@@ -1250,6 +1270,28 @@
       return ALL_STAGES.find(s => s.id === appState.currentStageId) || ALL_STAGES[0];
     }
 
+    // كل مرحلة أطول: نضيف موجتين تدريبيتين قبل موجة الزعيم.
+    function getStageWaveCount(stg) {
+      return stg.waves + 2;
+    }
+
+    let stageProgress = {
+      battleCleared: false,
+      quizPassed: false,
+      quranListened: false
+    };
+
+    function resetStageProgress() {
+      stageProgress = { battleCleared: false, quizPassed: false, quranListened: false };
+      const player = document.getElementById('quranAudioPlayer');
+      if (player) {
+        player.pause();
+        player.currentTime = 0;
+      }
+      const status = document.getElementById('miniQuranStatus');
+      if (status) status.textContent = 'متوقف';
+    }
+
     function initStageWave(waveNum) {
       const stg = getActiveStageObj();
       currentWave = waveNum;
@@ -1259,7 +1301,7 @@
       document.getElementById('bossHealthBarWrap').classList.add('hidden');
 
       // إذا كانت الموجة الأخيرة في المرحلة -> ظهور زعيم المرحلة!
-      if (waveNum >= stg.waves) {
+      if (waveNum >= getStageWaveCount(stg)) {
         const isQuranStage = stg.id === 22;
         const isGeniusStage = stg.id === 21;
         const maxHp = isQuranStage ? 18 : isGeniusStage ? 35 : 15 + stg.id * 2;
@@ -1301,7 +1343,7 @@
       document.getElementById('sideStageBadge').textContent = `المرحلة ${stg.id} من 22 • ${stg.world}`;
       document.getElementById('sideStageTitle').textContent = stg.name;
       document.getElementById('sideStageIcon').textContent = stg.icon;
-      document.getElementById('hudWave').textContent = `${currentWave} / ${stg.waves}`;
+      document.getElementById('hudWave').textContent = `${currentWave} / ${getStageWaveCount(stg)}`;
       document.getElementById('hudWeapon').textContent = `⚡ المستوى ${appState.weaponLevel}`;
       document.getElementById('hudLives').textContent = '❤️'.repeat(Math.max(1, playerLives));
       document.getElementById('hudScore').textContent = stageScore;
@@ -1329,6 +1371,7 @@
       }
 
       appState.currentStageId = stageId;
+      resetStageProgress();
       stageScore = 0;
       playerLives = 3;
       bullets = [];
@@ -1518,10 +1561,9 @@
                 appState.stars += 100;
                 appState.coins += 50;
                 if (stg.id === 22) appState.crowns += 1;
-                if (stg.id === appState.unlockedStage && appState.unlockedStage < 20) {
-                  appState.unlockedStage++;
-                }
                 activeBoss = null;
+                stageProgress.battleCleared = true;
+                gameActive = false;
                 document.getElementById('bossHealthBarWrap').classList.add('hidden');
                 saveAppState();
                 renderStagesMap('all');
@@ -1533,7 +1575,7 @@
 
         // الانتقال للموجة التالية عند انتهاء الغزاة
         if (invaders.length === 0 && !activeBoss) {
-          if (currentWave < stg.waves) {
+          if (currentWave < getStageWaveCount(stg)) {
             initStageWave(currentWave + 1);
             // فتح محطة سؤال تعليمي بين الموجات!
             openQuizStation(false);
@@ -1702,8 +1744,11 @@
       });
 
       document.getElementById('quizModalHikmah').classList.add('hidden');
+      const gate = document.getElementById('stageCompletionGate');
+      gate.classList.toggle('hidden', !isStageClearBonus);
       document.getElementById('quizModalContinueBtn').classList.add('hidden');
       document.getElementById('quizModalOverlay').classList.remove('hidden');
+      if (isStageClearBonus) updateStageCompletionGate();
       document.getElementById('quizModalOverlay').classList.add('flex');
     }
 
@@ -1714,6 +1759,7 @@
       const isRight = selectedIdx === currentQuizObj.correctIdx;
       if (isRight) {
         clickedBtn.className = 'w-full p-3.5 rounded-xl bg-emerald-600/40 border-2 border-emerald-400 text-emerald-200 font-extrabold text-sm text-right';
+        if (currentQuizObj.isStageClearBonus) stageProgress.quizPassed = true;
         appState.stars += 30;
         appState.coins += 15;
         stageScore += 30;
@@ -1735,9 +1781,49 @@
       document.getElementById('quizModalContinueBtn').classList.remove('hidden');
       saveAppState();
       updateSideHUD();
+      if (currentQuizObj.isStageClearBonus) updateStageCompletionGate();
+    }
+
+    function updateStageCompletionGate() {
+      const gate = document.getElementById('stageCompletionGate');
+      if (!gate || !currentQuizObj?.isStageClearBonus) return;
+      const quizEl = document.getElementById('stageGateQuiz');
+      const quranEl = document.getElementById('stageGateQuran');
+      const continueBtn = document.getElementById('quizModalContinueBtn');
+      quizEl.textContent = stageProgress.quizPassed ? 'السؤال: تمت الإجابة الصحيحة' : 'السؤال: أجب إجابة صحيحة للمتابعة';
+      quranEl.textContent = stageProgress.quranListened ? 'التلاوة: تم الاستماع حتى النهاية' : 'التلاوة: يجب الاستماع حتى النهاية';
+      quizEl.className = stageProgress.quizPassed ? 'text-emerald-300' : 'text-slate-300';
+      quranEl.className = stageProgress.quranListened ? 'text-emerald-300 mt-1' : 'text-slate-300 mt-1';
+      const ready = stageProgress.quizPassed && stageProgress.quranListened;
+      continueBtn.disabled = !ready;
+      continueBtn.classList.toggle('opacity-50', !ready);
+      continueBtn.classList.toggle('cursor-not-allowed', !ready);
+      continueBtn.textContent = ready ? 'انتقال تلقائي إلى المرحلة التالية' : 'أكمل الشرطين للمتابعة';
     }
 
     function closeQuizStation() {
+      if (currentQuizObj?.isStageClearBonus) {
+        if (!stageProgress.quizPassed || !stageProgress.quranListened) {
+          updateStageCompletionGate();
+          return;
+        }
+        const finishedStageId = appState.currentStageId;
+        const nextStageId = finishedStageId < ALL_STAGES.length ? finishedStageId + 1 : null;
+        if (finishedStageId <= 20 && appState.unlockedStage < finishedStageId + 1) {
+          appState.unlockedStage = Math.min(20, finishedStageId + 1);
+        }
+        saveAppState();
+        document.getElementById('quizModalOverlay').classList.add('hidden');
+        document.getElementById('quizModalOverlay').classList.remove('flex');
+        currentQuizObj = null;
+        if (nextStageId) {
+          window.setTimeout(() => launchStageDirect(nextStageId), 250);
+        } else {
+          gameActive = false;
+          alert('أحسنت! أتممت جميع مراحل اللعبة.');
+        }
+        return;
+      }
       document.getElementById('quizModalOverlay').classList.add('hidden');
       document.getElementById('quizModalOverlay').classList.remove('flex');
       gameActive = true;
@@ -1820,7 +1906,7 @@
               <span class="text-2xl">${isUnlocked ? stg.icon : '🔒'}</span>
             </div>
             <h4 class="font-extrabold text-sm text-white">${stg.name}</h4>
-            <p class="text-xs text-slate-400 mt-0.5">${stg.world} • ${stg.waves} موجات</p>
+            <p class="text-xs text-slate-400 mt-0.5">${stg.world} • ${getStageWaveCount(stg)} موجات</p>
           </div>
           <div class="mt-3 pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs font-bold">
             <span class="${isUnlocked ? 'text-emerald-300' : 'text-slate-500'}">
