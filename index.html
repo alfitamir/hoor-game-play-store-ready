@@ -1,0 +1,2075 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https://server8.mp3quran.net; connect-src 'self';" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <title>لعبة حور: العب وتعلّم | النسخة الاحترافية الكاملة (22 مرحلة)</title>
+
+  <!-- خطوط عربية حديثة وواضحة: Cairo, Tajawal, Amiri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN للتصميم العصري السريع -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slateDark: '#0F172A',
+            slateCard: '#1E293B',
+            emeraldRoyal: '#10B981',
+            emeraldDeep: '#064E3B',
+            goldPure: '#F59E0B',
+            goldSoft: '#FDE68A'
+          },
+          fontFamily: {
+            sans: ['Tajawal', 'Cairo', 'sans-serif'],
+            display: ['Cairo', 'Tajawal', 'sans-serif'],
+            quran: ['Amiri', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body {
+      background-color: #0F172A;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 85% 10%, rgba(245, 158, 11, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(124, 58, 237, 0.12) 0%, transparent 50%);
+      color: #F8FAFC;
+      font-family: 'Tajawal', 'Cairo', sans-serif;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    /* زخرفة إسلامية هندسية خفيفة في الخلفية */
+    .islamic-pattern {
+      background-image: radial-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .gold-glow {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+    }
+    .emerald-glow {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+    }
+    .cosmic-glow {
+      box-shadow: 0 0 28px rgba(139, 92, 246, 0.45);
+    }
+    canvas {
+      touch-action: none;
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    /* تخصيص شريط التمرير */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0F172A; }
+    ::-webkit-scrollbar-thumb { background: #10B981; border-radius: 999px; }
+
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+
+    body {
+      min-height: 100dvh;
+      padding-bottom: var(--safe-bottom);
+    }
+
+    button, select, input {
+      font: inherit;
+    }
+
+    button, [role="button"] {
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid #FBBF24;
+      outline-offset: 3px;
+    }
+
+    .main-view {
+      animation: viewEnter 180ms ease-out both;
+      scroll-margin-top: 92px;
+    }
+
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    .network-status {
+      position: fixed;
+      top: max(0.5rem, var(--safe-top));
+      left: 50%;
+      z-index: 70;
+      transform: translate(-50%, -150%);
+      transition: transform 220ms ease, opacity 220ms ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .network-status.is-visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .touch-control {
+      min-width: 86px;
+      min-height: 52px;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .nav-tab, .mobile-nav-tab {
+      transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .nav-tab[aria-current="page"], .mobile-nav-tab[aria-current="page"] {
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.45), 0 8px 22px rgba(16, 185, 129, 0.18);
+    }
+
+    @keyframes viewEnter {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* لوحة ألوان هادئة: نحتفظ بلون التمييز للإنجازات فقط ونخفف الضوضاء البصرية. */
+    body {
+      background-color: #111827;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(45, 212, 191, 0.055) 0%, transparent 42%),
+        radial-gradient(circle at 85% 10%, rgba(251, 191, 36, 0.045) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.045) 0%, transparent 48%);
+    }
+
+    .islamic-pattern {
+      background-image: radial-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+    }
+
+    .gold-glow { box-shadow: 0 0 18px rgba(245, 158, 11, 0.16); }
+    .emerald-glow { box-shadow: 0 0 18px rgba(16, 185, 129, 0.14); }
+    .cosmic-glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.16); }
+
+    header, #desktopNav, .mobile-bottom-nav {
+      background-color: rgba(17, 24, 39, 0.95) !important;
+      border-color: rgba(71, 85, 105, 0.55) !important;
+    }
+
+    .nav-tab { letter-spacing: 0; }
+    .nav-tab:not([aria-current="page"]):hover { background-color: #273449 !important; }
+
+    @media (max-width: 640px) {
+      .mobile-nav-tab .nav-icon { font-size: 1.08rem; opacity: 0.9; }
+      .mobile-nav-tab[aria-current="page"] { background: #1F4D49; box-shadow: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding-bottom: calc(76px + var(--safe-bottom));
+      }
+
+      header {
+        padding-top: max(0.55rem, var(--safe-top));
+      }
+
+      header > div {
+        align-items: flex-start;
+      }
+
+      header .font-display {
+        max-width: 42vw;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      header .flex.items-center.gap-2.flex-wrap {
+        max-width: 52vw;
+        justify-content: flex-end;
+      }
+
+      header .flex.items-center.gap-2.flex-wrap > div {
+        padding-inline: 0.55rem;
+      }
+
+      main {
+        padding: 0.75rem !important;
+        gap: 0.9rem !important;
+      }
+
+      main > .grid:first-child {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        margin-inline: -0.75rem;
+        padding-inline: 0.75rem;
+        padding-bottom: 0.25rem;
+      }
+
+      main > .grid:first-child > div {
+        min-width: min(88vw, 360px);
+        scroll-snap-align: start;
+      }
+
+      main > .grid:first-child h2 {
+        font-size: 0.95rem;
+      }
+
+      main > .grid:first-child p {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      #desktopNav {
+        display: none;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 60;
+        padding: 0.45rem max(0.35rem, var(--safe-left)) calc(0.45rem + var(--safe-bottom)) max(0.35rem, var(--safe-right));
+        background: rgba(15, 23, 42, 0.96);
+        border-top: 1px solid rgba(16, 185, 129, 0.35);
+        box-shadow: 0 -12px 30px rgba(2, 6, 23, 0.45);
+        backdrop-filter: blur(18px);
+      }
+
+      .mobile-nav-tab {
+        min-height: 56px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.12rem;
+        padding: 0.25rem 0.15rem;
+        border-radius: 0.9rem;
+        background: transparent;
+        color: #94A3B8;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
+      .mobile-nav-tab .nav-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+      }
+
+      .mobile-nav-tab[aria-current="page"] {
+        color: #F8FAFC;
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.42), rgba(5, 150, 105, 0.2));
+      }
+
+      #view-play > .grid {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #view-play > .grid > div:first-child {
+        order: 2;
+      }
+
+      #view-play > .grid > div:last-child {
+        order: 1;
+      }
+
+      #canvasContainer {
+        border-radius: 1.35rem;
+      }
+
+      #arcadeCanvas {
+        min-height: 260px;
+        object-fit: contain;
+      }
+
+      #view-play .touch-control {
+        flex: 1;
+      }
+
+      #view-play .flex.items-center.justify-between.w-full {
+        position: sticky;
+        bottom: calc(76px + var(--safe-bottom));
+        z-index: 20;
+        padding: 0.5rem;
+        border: 1px solid rgba(71, 85, 105, 0.8);
+        border-radius: 1.1rem;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(14px);
+      }
+
+      #view-play .flex.items-center.justify-between.w-full > div:first-child {
+        display: contents;
+      }
+
+      #view-play .flex.items-center.justify-between.w-full .hidden {
+        display: none;
+      }
+
+      #quizModalOverlay > div, #portalOverlay > div {
+        max-height: calc(100dvh - 1.5rem - var(--safe-top) - var(--safe-bottom));
+        overflow-y: auto;
+      }
+    }
+  </style>
+</head>
+<body class="islamic-pattern min-h-screen flex flex-col">
+  <div id="networkStatus" class="network-status rounded-full border border-amber-400/50 bg-slate-900/95 px-4 py-2 text-xs font-extrabold text-amber-200 shadow-xl" role="status" aria-live="polite">
+    ⚠️ لا يوجد اتصال — سيُحفظ التقدم على هذا الجهاز
+  </div>
+
+  <!-- =====================================================================
+       1. بوابة الدخول الآمنة (Secure Google Portal - /portal.html & /login.html)
+       ===================================================================== -->
+  <div id="portalOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-3xl w-full bg-slate-900 border-2 border-emerald-500/40 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden my-auto">
+      <!-- الشريط الزخرفي العلوي -->
+      <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-500"></div>
+
+      <!-- شارة الأمان العائلي -->
+      <div class="flex justify-center mb-4">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs md:text-sm font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          🛡️ بيئة آمنة للأطفال واليافعين 100% خالية من الإعلانات
+        </span>
+      </div>
+
+      <!-- الشعار الرسمي: نجمة ثمانية إسلامية هندسية مضيئة -->
+      <div class="flex flex-col items-center text-center mb-6">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-900 border-2 border-amber-400 flex items-center justify-center gold-glow mb-3">
+          <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="14" y="14" width="36" height="36" rx="4" fill="#F59E0B" fill-opacity="0.2" stroke="#FBBF24" stroke-width="2.5"/>
+            <rect x="14" y="14" width="36" height="36" rx="4" transform="rotate(45 32 32)" fill="#10B981" fill-opacity="0.25" stroke="#FDE68A" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="8" fill="#FDE68A"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold font-display text-white">
+          لعبة حور: العب وتعلّم
+        </h1>
+        <p class="text-slate-300 text-sm md:text-base mt-1 max-w-xl">
+          مغامرات أركيد فضائية وتعليمية ممتعة في ٢٢ مرحلة، مع روضة أصحاب القرآن الكريم وتحدي العباقرة!
+        </p>
+      </div>
+
+      <!-- بطاقات معاينة التحديات الكبرى داخل البوابة -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        <div class="bg-gradient-to-b from-emerald-950/90 to-slate-900 border border-amber-400/40 rounded-2xl p-4 text-center">
+          <div class="text-2xl mb-1">📖</div>
+          <div class="font-bold text-amber-300 text-sm">روضة أصحاب القرآن (٢٢)</div>
+          <p class="text-xs text-slate-300 mt-1">تلاوات ندية، طائر النور والبركة، ومكافأة تاج الوقار</p>
+        </div>
+        <div class="bg-gradient-to-b from-purple-950/90 to-slate-900 border border-purple-400/40 rounded-2xl p-4 text-center">
+          <div class="text-2xl mb-1">🧠</div>
+          <div class="font-bold text-purple-300 text-sm">تحدي العباقرة (٢١)</div>
+          <p class="text-xs text-slate-300 mt-1">متتابعات حسابية، ألغاز ذكاء، وزعيم النيون الكوني</p>
+        </div>
+        <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-emerald-400/40 rounded-2xl p-4 text-center">
+          <div class="text-2xl mb-1">🌟🚀</div>
+          <div class="font-bold text-emerald-300 text-sm">خريطة النجوم (١ - ٢٠)</div>
+          <p class="text-xs text-slate-300 mt-1">من المزرعة الخضراء إلى الكواكب والمجرات الكبرى</p>
+        </div>
+      </div>
+
+      <!-- نموذج الدخول السريع + جوجل -->
+      <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div>
+            <label class="block text-xs font-bold text-emerald-300 mb-1">اسم البطل / البطلة:</label>
+            <input id="portalHeroName" type="text" value="حور" placeholder="اكتب اسمك هنا..."
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 text-white font-bold focus:outline-none focus:border-emerald-400 mb-3" />
+
+            <label class="block text-xs font-bold text-amber-300 mb-1">الفئة العمرية ومستوى الأسئلة:</label>
+            <select id="portalAgeTier" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 text-white font-bold focus:outline-none focus:border-amber-400">
+              <option value="5-8">🌱 5 - 8 سنوات (مستوى البراعم)</option>
+              <option value="9-12" selected>🚀 9 - 12 سنة (مستوى المستكشفين)</option>
+              <option value="13-16">⚡ 13 - 16 سنة (مستوى الطليعة والعباقرة)</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-3 items-center justify-center">
+            <button onclick="enterGameAsGuest()"
+              class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-base shadow-lg emerald-glow transition transform hover:-translate-y-0.5">
+              🚀 الدخول السريع كبطل / بطلة
+            </button>
+
+            <div class="text-xs text-slate-400 font-semibold">— أو احفظ تقدمك سحابياً عبر جوجل —</div>
+
+            <div class="rounded-xl border border-slate-600 bg-slate-900/70 px-4 py-3 text-center text-xs font-bold text-slate-300">
+              🔒 هذه النسخة تحفظ التقدم على هذا الجهاز فقط. لا نطلب بريدك الإلكتروني ولا نرسل بيانات الأطفال من داخل اللعبة.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       2. الشريط العلوي الموحد (Top Navigation & Live Stats)
+       ===================================================================== -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-emerald-500/25 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- الهوية والشعار -->
+      <div class="flex items-center gap-3">
+        <div onclick="openPortalModal()" class="cursor-pointer w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-900 border border-amber-400 flex items-center justify-center shadow-md" title="بوابة الحساب">
+          <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+            <rect x="14" y="14" width="36" height="36" rx="4" stroke="#FBBF24" stroke-width="3"/>
+            <rect x="14" y="14" width="36" height="36" rx="4" transform="rotate(45 32 32)" stroke="#10B981" stroke-width="3"/>
+            <circle cx="32" cy="32" r="6" fill="#FDE68A"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-extrabold text-base md:text-lg text-white">لعبة حور: العب وتعلّم</span>
+            <span class="hidden sm:inline-block text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">
+              🛡️ آمن 100%
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-300">
+            <img id="headerAvatar" src="" alt="" class="w-4 h-4 rounded-full hidden" />
+            <span id="headerHeroInfo">البطل: حور (9-12 سنة)</span>
+            <span id="syncStatusBadge" class="text-[11px] text-amber-300 font-semibold">• 💾 محفوظ محلياً</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- إحصائيات البطل والأزرار السريعة -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="bg-slate-800 border border-amber-500/30 px-3 py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1.5">
+          <span>⭐</span> <span id="statStars" class="text-amber-300">0</span>
+        </div>
+        <div class="bg-slate-800 border border-amber-500/30 px-3 py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1.5">
+          <span>🪙</span> <span id="statCoins" class="text-yellow-300">0</span>
+        </div>
+        <div class="bg-slate-800 border border-emerald-500/30 px-3 py-1 rounded-full text-xs md:text-sm font-bold flex items-center gap-1.5" title="تيجان الوقار">
+          <span>👑</span> <span id="statCrowns" class="text-emerald-300">0</span>
+        </div>
+        <button id="soundBtn" onclick="toggleAudio()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+          🔊 الصوت
+        </button>
+        <button onclick="openPortalModal()" class="bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-300 transition">
+          👤 الحساب
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       3. شريط التنقل الرئيسي بين أقسام المنصة
+       ===================================================================== -->
+  <nav id="desktopNav" class="bg-slate-900/60 border-b border-slate-800 px-4 py-2 overflow-x-auto" aria-label="التنقل الرئيسي">
+    <div class="max-w-7xl mx-auto flex items-center gap-2">
+      <button onclick="switchMainView('play', this)" class="nav-tab active px-4 py-2 rounded-xl text-xs md:text-sm font-extrabold bg-emerald-600 text-white whitespace-nowrap transition">
+        ساحة اللعب
+      </button>
+      <button onclick="switchMainView('map', this)" class="nav-tab px-4 py-2 rounded-xl text-xs md:text-sm font-bold bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap transition">
+        خريطة المراحل
+      </button>
+      <button onclick="switchMainView('quran', this)" class="nav-tab px-4 py-2 rounded-xl text-xs md:text-sm font-bold bg-slate-800 text-amber-300 hover:bg-slate-700 whitespace-nowrap transition">
+        روضة القرآن
+      </button>
+      <button onclick="switchMainView('catalog', this)" class="nav-tab px-4 py-2 rounded-xl text-xs md:text-sm font-bold bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap transition">
+        بنك التدريب
+      </button>
+      <button onclick="switchMainView('leaderboard', this)" class="nav-tab px-4 py-2 rounded-xl text-xs md:text-sm font-bold bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap transition">
+        الإنجازات والنسخ الاحتياطي
+      </button>
+    </div>
+  </nav>
+
+  <nav class="mobile-bottom-nav" aria-label="تنقل الهاتف">
+    <button class="mobile-nav-tab" aria-current="page" onclick="switchMainView('play')" type="button">
+      <span class="nav-icon" aria-hidden="true">🎮</span><span>اللعب</span>
+    </button>
+    <button class="mobile-nav-tab" onclick="switchMainView('map')" type="button">
+      <span class="nav-icon" aria-hidden="true">🗺️</span><span>المراحل</span>
+    </button>
+    <button class="mobile-nav-tab" onclick="switchMainView('quran')" type="button">
+      <span class="nav-icon" aria-hidden="true">📖</span><span>القرآن</span>
+    </button>
+    <button class="mobile-nav-tab" onclick="switchMainView('catalog')" type="button">
+      <span class="nav-icon" aria-hidden="true">📚</span><span>التدريب</span>
+    </button>
+    <button class="mobile-nav-tab" onclick="switchMainView('leaderboard')" type="button">
+      <span class="nav-icon" aria-hidden="true">🏆</span><span>إنجازاتي</span>
+    </button>
+  </nav>
+
+  <!-- =====================================================================
+       4. المحتوى الرئيسي (Main Container)
+       ===================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-5">
+
+    <!-- تم نقل الوصول إلى المراحل الخاصة إلى خريطة المراحل وروضة القرآن لتقليل التكرار. -->
+    <!-- =====================================================================
+         القسم (A): ساحة اللعب الأركيد (Chicken Invaders Style Arcade View)
+         ===================================================================== -->
+    <section id="view-play" class="main-view block">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+
+        <!-- لوحة معلومات المرحلة الحالية والتحكم الجانبي -->
+        <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <span id="sideStageBadge" class="text-xs font-extrabold text-emerald-400">المرحلة 1 من 22</span>
+              <h3 id="sideStageTitle" class="text-base font-extrabold text-white mt-0.5">المزرعة الخضراء الهادئة</h3>
+            </div>
+            <div id="sideStageIcon" class="text-3xl">🌾</div>
+          </div>
+
+          <p id="sideStageDesc" class="text-xs text-slate-300 leading-relaxed">
+            احمِ المزرعة الخضراء واجمع البيض الذهبي ومخطوطات الحكمة للإجابة عن الأسئلة التعليمية!
+          </p>
+
+          <div class="bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">الموجة الحالية (Wave):</span>
+              <span id="hudWave" class="font-extrabold text-amber-300">1 / 3</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">مستوى سلاح النور:</span>
+              <span id="hudWeapon" class="font-extrabold text-emerald-300">⚡ المستوى 1</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">القلوب المتبقية:</span>
+              <span id="hudLives" class="font-extrabold text-rose-400">❤️❤️❤️</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">نقاط المرحلة:</span>
+              <span id="hudScore" class="font-extrabold text-white">0</span>
+            </div>
+          </div>
+
+          <!-- أزرار التحكم السريعة باللعبة -->
+          <div class="flex flex-col gap-2 mt-1">
+            <button id="btnStartPause" onclick="toggleGameLoop()"
+              class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-sm shadow-lg transition">
+              ابدأ المعركة التعليمية
+            </button>
+            <button onclick="openQuizStation(false)"
+              class="w-full py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white font-bold text-xs border border-emerald-400/40 transition">
+              سؤال الحكمة الفوري (+30 نجمة)
+            </button>
+            <button onclick="switchMainView('map', document.querySelectorAll('.nav-tab')[1])"
+              class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-600 transition">
+              تغيير المرحلة (1 - 22)
+            </button>
+          </div>
+
+          <!-- مشغل التلاوة المصغر أثناء اللعب -->
+          <div class="bg-emerald-950/60 border border-emerald-500/30 rounded-xl p-3 mt-1">
+            <div class="text-xs font-bold text-amber-300 mb-1.5 flex items-center justify-between">
+              <span>تلاوة مصاحبة</span>
+              <span id="miniQuranStatus" class="text-[10px] text-emerald-300">متوقف</span>
+            </div>
+            <div class="flex gap-1.5">
+              <select id="miniSurahSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                <option value="https://server8.mp3quran.net/afs/001.mp3">سورة الفاتحة - العفاسي</option>
+                <option value="https://server8.mp3quran.net/afs/067.mp3">سورة الملك - العفاسي</option>
+                <option value="https://server8.mp3quran.net/afs/112.mp3">سورة الإخلاص - العفاسي</option>
+                <option value="https://server8.mp3quran.net/afs/113.mp3">سورة الفلق - العفاسي</option>
+                <option value="https://server8.mp3quran.net/afs/114.mp3">سورة الناس - العفاسي</option>
+              </select>
+              <button onclick="toggleQuranAudio()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-1 rounded-lg text-xs">
+                تشغيل/إيقاف
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- شاشة الكانفاس الرئيسية (Chicken Invaders / Cosmic / Quran Oasis Canvas) -->
+        <div class="lg:col-span-3 flex flex-col items-center">
+          <div id="canvasContainer" class="w-full max-w-[760px] rounded-3xl overflow-hidden border-2 border-amber-400/70 shadow-2xl bg-slate-950 relative">
+            <!-- شريط صحة الزعيم (يظهر عند موجات الزعماء) -->
+            <div id="bossHealthBarWrap" class="hidden absolute top-3 left-6 right-6 z-10 bg-slate-900/90 border border-amber-400/50 rounded-full p-1.5 flex items-center gap-3">
+              <span id="bossNameLabel" class="text-xs font-extrabold text-amber-300 px-2 whitespace-nowrap">👾 زعيم المرحلة</span>
+              <div class="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
+                <div id="bossHealthFill" class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 transition-all duration-150" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <canvas id="arcadeCanvas" width="760" height="480"></canvas>
+          </div>
+
+          <!-- أزرار لمس إضافية للهواتف والأجهزة اللوحية -->
+          <div class="flex items-center justify-between w-full max-w-[760px] mt-3 gap-2">
+            <div class="flex gap-2">
+              <button onpointerdown="moveTouch(-38)" class="touch-control px-5 py-2.5 rounded-xl bg-slate-800 active:bg-emerald-600 border border-slate-600 font-extrabold text-sm" type="button" aria-label="تحريك المركبة يميناً">
+                ➡️ يمين
+              </button>
+              <button onpointerdown="moveTouch(38)" class="touch-control px-5 py-2.5 rounded-xl bg-slate-800 active:bg-emerald-600 border border-slate-600 font-extrabold text-sm" type="button" aria-label="تحريك المركبة يساراً">
+                ⬅️ يسار
+              </button>
+            </div>
+            <div class="text-xs text-slate-400 hidden sm:block">
+              💡 اسحب بإصبعك أو الماوس مباشرة على الشاشة للتحرك، الإطلاق تلقائي وبزر المسافة (Space)!
+            </div>
+            <button onpointerdown="playerShoot()" class="touch-control px-5 py-2.5 rounded-xl bg-amber-500 active:bg-amber-400 text-slate-950 font-extrabold text-sm" type="button" aria-label="إطلاق سلاح النور">
+              إطلاق النور
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         القسم (B): خريطة الـ 22 مرحلة التفاعلية مع الفلاتر السريعة
+         ===================================================================== -->
+    <section id="view-map" class="main-view hidden">
+      <div class="bg-slate-900/90 border border-slate-700 rounded-3xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-white">خريطة المراحل التفاعلية (٢٢)</h2>
+            <p class="text-xs text-slate-400 mt-0.5">اختر أي مرحلة للبدء فوراً — المراحل 21 و 22 مفتوحة دائماً للوصول السريع!</p>
+          </div>
+          <!-- فلاتر الفرز السريعة -->
+          <div class="flex flex-wrap gap-2">
+            <button onclick="renderStagesMap('all')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold">الكل (22)</button>
+            <button onclick="renderStagesMap('basic')" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">المراحل الأساسية (1-20)</button>
+            <button onclick="renderStagesMap('genius')" class="px-3.5 py-1.5 rounded-xl bg-purple-600/80 hover:bg-purple-600 text-white text-xs font-bold">🧠 تحدي العباقرة (21)</button>
+            <button onclick="renderStagesMap('quran')" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold">📖 روضة القرآن (22)</button>
+          </div>
+        </div>
+
+        <div id="stagesMapGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         القسم (C): روضة أصحاب القرآن الكريم والتلاوات الصوتية
+         ===================================================================== -->
+    <section id="view-quran" class="main-view hidden">
+      <div class="bg-gradient-to-br from-emerald-950 via-slate-900 to-amber-950/40 border-2 border-amber-400/50 rounded-3xl p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <span class="text-xs font-extrabold bg-amber-400 text-slate-950 px-3 py-1 rounded-full">على منهج أهل السنة والجماعة</span>
+            <h2 class="text-2xl font-extrabold text-white mt-2">روضة أصحاب القرآن الكريم</h2>
+            <p class="text-sm text-emerald-200 mt-1">
+              قال رسول الله ﷺ: «إنَّ للهِ أهلينَ من النَّاسِ، قالوا: من هم يا رسولَ اللهِ؟ قال: أهلُ القرآنِ هم أهلُ اللهِ وخاصَّتُه» (صححه الألباني).
+            </p>
+          </div>
+          <button onclick="launchStageDirect(22)" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-6 py-3 rounded-2xl shadow-lg">
+            العب المرحلة ٢٢
+          </button>
+        </div>
+
+        <div id="quranCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         القسم (D): بنك الأسئلة والمراجعة المحقق (Practice Catalog)
+         ===================================================================== -->
+    <section id="view-catalog" class="main-view hidden">
+      <div class="bg-slate-900/90 border border-slate-700 rounded-3xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-xl font-extrabold text-white">بنك الأسئلة وبطاقات الحكمة</h2>
+            <p class="text-xs text-slate-400">مراجعة شاملة لأسئلة العقيدة، القرآن، السيرة، العلوم، وتحدي العباقرة مع الدليل والحكمة.</p>
+          </div>
+          <div id="catalogFilterBtns" class="flex flex-wrap gap-2"></div>
+        </div>
+        <div id="catalogQuestionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         القسم (E): لوحة المتصدرين، المزامنة السحابية، وتصدير النسخة الأوفلاين
+         ===================================================================== -->
+    <section id="view-leaderboard" class="main-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- جدول المتصدرين -->
+        <div class="lg:col-span-2 bg-slate-900/90 border border-slate-700 rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-extrabold text-white">لوحة شرف الأبطال والبطلات</h2>
+            <span class="text-xs text-emerald-400 font-bold">محدثة تلقائياً محلياً وسحابياً</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-sm">
+              <thead>
+                <tr class="border-b border-slate-700 text-slate-400 text-xs">
+                  <th class="py-2.5 px-3">المركز</th>
+                  <th class="py-2.5 px-3">اسم البطل</th>
+                  <th class="py-2.5 px-3">الأوسمة</th>
+                  <th class="py-2.5 px-3">النجوم ⭐</th>
+                  <th class="py-2.5 px-3">العملات 🪙</th>
+                  <th class="py-2.5 px-3">تيجان الوقار 👑</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- إدارة النسخ الاحتياطي وتصدير اللعبة أوفلاين -->
+        <div class="bg-slate-900/90 border border-slate-700 rounded-3xl p-5 flex flex-col gap-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-amber-300">التصدير والنسخ الاحتياطي</h3>
+            <p class="text-xs text-slate-300 mt-1">
+              يمكنك تنزيل اللعبة كاملة كملف HTML واحد يعمل بدون إنترنت على أي جوال أو حاسوب، أو حفظ ملف تقدمك.
+            </p>
+          </div>
+
+          <button onclick="downloadStandaloneOfflineGame()"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm shadow-lg">
+            📲 تحميل اللعبة كاملة كملف أوفلاين (.HTML)
+          </button>
+
+          <button onclick="exportSaveFile()"
+            class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-amber-400/40 text-amber-300 font-bold text-xs">
+            تصدير ملف التقدم (JSON)
+          </button>
+
+          <label class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs text-center cursor-pointer">
+            استعادة ملف تقدم (JSON)
+            <input type="file" accept=".json" onchange="importSaveFile(event)" class="hidden" />
+          </label>
+
+          <div class="w-full rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2.5 text-center text-xs font-bold text-slate-300">
+            🔒 المزامنة السحابية غير مفعّلة في النسخة المحلية. استخدم ملف JSON لنقل التقدم بأمان.
+          </div>
+
+          <button onclick="resetAllGameData()"
+            class="w-full py-2 px-4 rounded-xl bg-rose-950/70 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-bold text-xs mt-auto">
+            إعادة تعيين التقدم
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       5. نافذة محطة الأسئلة التفاعلية (Educational Quiz & Hikmah Modal)
+       ===================================================================== -->
+  <div id="quizModalOverlay" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="max-w-lg w-full bg-slate-900 border-2 border-amber-400 rounded-3xl p-6 shadow-2xl text-center relative">
+      <div id="quizModalBadge" class="inline-block px-3.5 py-1 rounded-full text-xs font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40 mb-3">
+        محطة الحكمة والذكاء
+      </div>
+      <h3 id="quizModalQuestion" class="text-lg md:text-xl font-extrabold text-white leading-relaxed mb-5"></h3>
+
+      <div id="quizModalOptions" class="flex flex-col gap-2.5 text-right"></div>
+
+      <div id="quizModalHikmah" class="hidden mt-4 p-4 rounded-2xl bg-emerald-950/80 border border-emerald-400/50 text-right text-xs md:text-sm text-emerald-100 leading-relaxed"></div>
+
+      <div id="stageCompletionGate" class="hidden mt-4 rounded-2xl border border-slate-600 bg-slate-800/80 p-4 text-right text-xs leading-relaxed">
+        <div class="font-extrabold text-amber-300 mb-2">إتمام المرحلة قبل الانتقال</div>
+        <div id="stageGateQuiz" class="text-slate-300">السؤال: لم تتم الإجابة بعد</div>
+        <div id="stageGateQuran" class="text-slate-300 mt-1">التلاوة: يجب الاستماع حتى النهاية</div>
+        <button id="stageGateListenBtn" onclick="toggleQuranAudio()" type="button" class="w-full mt-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-extrabold">
+          تشغيل التلاوة المطلوبة
+        </button>
+      </div>
+
+      <button id="quizModalContinueBtn" onclick="closeQuizStation()"
+        class="hidden w-full mt-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-extrabold text-sm shadow-lg">
+        ✨ متابعة المغامرة واستلام المكافأة
+      </button>
+    </div>
+  </div>
+
+  <!-- عنصر الصوت المخفي للتلاوات القرآنية الندية -->
+  <audio id="quranAudioPlayer" preload="none"></audio>
+
+  <!-- =====================================================================
+       6. المحرك البرمجي الشامل (Game Engine, 22 Stages, Verified Bank, Sync)
+       ===================================================================== -->
+  <script>
+    /*************************************************************************
+     * أ. قاعدة بيانات الـ 22 مرحلة الكاملة (22 Progressive Stages + Special 21 & 22)
+     *************************************************************************/
+    const ALL_STAGES = [
+      // العالم الأول: المزرعة الخضراء (1 - 4)
+      { id: 1, type: 'basic', name: 'المزرعة الخضراء الهادئة', world: 'المزرعة الخضراء', icon: '🌾', enemyEmoji: '🐔', bossEmoji: '🐓', bg1: '#064E3B', bg2: '#022C22', waves: 3, speed: 1.2 },
+      { id: 2, type: 'basic', name: 'بستان النخيل المبارك', world: 'المزرعة الخضراء', icon: '🌴', enemyEmoji: '🐥', bossEmoji: '🦅', bg1: '#065F46', bg2: '#064E3B', waves: 3, speed: 1.3 },
+      { id: 3, type: 'basic', name: 'سهول السنابل الذهبية', world: 'المزرعة الخضراء', icon: '🌻', enemyEmoji: '🐔', bossEmoji: '🦃', bg1: '#115E59', bg2: '#042F2E', waves: 3, speed: 1.4 },
+      { id: 4, type: 'basic', name: 'قلعة الحصاد الخضراء', world: 'المزرعة الخضراء', icon: '🏡', enemyEmoji: '🐦', bossEmoji: '🦅', bg1: '#14532D', bg2: '#052E16', waves: 4, speed: 1.5 },
+
+      // العالم الثاني: صحراء الذهب وقوافل الحكمة (5 - 8)
+      { id: 5, type: 'basic', name: 'كثبان الرمال الذهبية', world: 'صحراء الذهب', icon: '🐪', enemyEmoji: '🦅', bossEmoji: '🐉', bg1: '#78350F', bg2: '#451A03', waves: 3, speed: 1.6 },
+      { id: 6, type: 'basic', name: 'واحة النخيل والينابيع', world: 'صحراء الذهب', icon: '🏝️', enemyEmoji: '🐝', bossEmoji: '🦂', bg1: '#713F12', bg2: '#422006', waves: 3, speed: 1.7 },
+      { id: 7, type: 'basic', name: 'وادي القوافل القديمة', world: 'صحراء الذهب', icon: '⛺', enemyEmoji: '🦅', bossEmoji: '🦖', bg1: '#92400E', bg2: '#451A03', waves: 4, speed: 1.8 },
+      { id: 8, type: 'basic', name: 'حصن الصحراء المشمس', world: 'صحراء الذهب', icon: '🕌', enemyEmoji: '🦇', bossEmoji: '🐉', bg1: '#7C2D12', bg2: '#431407', waves: 4, speed: 1.9 },
+
+      // العالم الثالث: أعماق المحيطات والمرجان (9 - 12)
+      { id: 9, type: 'basic', name: 'شاطئ اللؤلؤ والمرجان', world: 'أعماق المحيطات', icon: '🌊', enemyEmoji: '🦀', bossEmoji: '🐙', bg1: '#0C4A6E', bg2: '#082F49', waves: 3, speed: 2.0 },
+      { id: 10, type: 'basic', name: 'مضيق البحارة الشجعان', world: 'أعماق المحيطات', icon: '⛵', enemyEmoji: '🐡', bossEmoji: '🦈', bg1: '#1E3A8A', bg2: '#172554', waves: 4, speed: 2.1 },
+      { id: 11, type: 'basic', name: 'كهوف الياقوت المائية', world: 'أعماق المحيطات', icon: '🐚', enemyEmoji: '🦑', bossEmoji: '🐳', bg1: '#155E75', bg2: '#083344', waves: 4, speed: 2.2 },
+      { id: 12, type: 'basic', name: 'قلعة المحيط العميق', world: 'أعماق المحيطات', icon: '⚓', enemyEmoji: '🐡', bossEmoji: '🐙', bg1: '#1E40AF', bg2: '#0F172A', waves: 4, speed: 2.3 },
+
+      // العالم الرابع: الكواكب السيارة ومدارات النور (13 - 16)
+      { id: 13, type: 'basic', name: 'مدار القمر المنير', world: 'الكواكب السيارة', icon: '🌙', enemyEmoji: '🛸', bossEmoji: '🤖', bg1: '#1E1B4B', bg2: '#0F172A', waves: 4, speed: 2.4 },
+      { id: 14, type: 'basic', name: 'كوكب المريخ الأحمر', world: 'الكواكب السيارة', icon: '🪐', enemyEmoji: '☄️', bossEmoji: '👾', bg1: '#4C1D95', bg2: '#2E1065', waves: 4, speed: 2.5 },
+      { id: 15, type: 'basic', name: 'حلقات زحل اللامعة', world: 'الكواكب السيارة', icon: '💫', enemyEmoji: '🛸', bossEmoji: '🛰️', bg1: '#312E81', bg2: '#1E1B4B', waves: 4, speed: 2.6 },
+      { id: 16, type: 'basic', name: 'محطة المشتري العملاقة', world: 'الكواكب السيارة', icon: '🔭', enemyEmoji: '👽', bossEmoji: '👾', bg1: '#3B0764', bg2: '#1E0536', waves: 5, speed: 2.7 },
+
+      // العالم الخامس: المجرات الكبرى والفضاء الخارجي (17 - 20)
+      { id: 17, type: 'basic', name: 'سديم النجوم الذهبية', world: 'الفضاء الخارجي', icon: '🌌', enemyEmoji: '🛸', bossEmoji: '👾', bg1: '#0F172A', bg2: '#020617', waves: 4, speed: 2.8 },
+      { id: 18, type: 'basic', name: 'مجرة درب التبانة', world: 'الفضاء الخارجي', icon: '🌠', enemyEmoji: '🚀', bossEmoji: '🤖', bg1: '#1E293B', bg2: '#090D16', waves: 5, speed: 2.9 },
+      { id: 19, type: 'basic', name: 'بوابة النجوم القصوى', world: 'الفضاء الخارجي', icon: '⚡', enemyEmoji: '🛸', bossEmoji: '👾', bg1: '#311042', bg2: '#0F051D', waves: 5, speed: 3.0 },
+      { id: 20, type: 'basic', name: 'عرش المجرة الكبرى', world: 'الفضاء الخارجي', icon: '🏆', enemyEmoji: '👾', bossEmoji: '👑', bg1: '#111827', bg2: '#030712', waves: 5, speed: 3.1 },
+
+      // المرحلة الخاصة (21): تحدي العباقرة وأذكياء المستقبل
+      {
+        id: 21, type: 'genius', name: 'تحدي العباقرة وأذكياء المستقبل 🧠',
+        world: 'نيون كوزميك العباقرة', icon: '🧠', enemyEmoji: '🔮', bossEmoji: '🧠',
+        bossTitle: 'زعيم العباقرة الخارق (Cosmic Mastermind)',
+        bg1: '#4C1D95', bg2: '#090D16', waves: 4, speed: 2.8
+      },
+
+      // المرحلة الخاصة (22): روضة أصحاب القرآن الكريم وخاصته
+      {
+        id: 22, type: 'quran', name: 'روضة أصحاب القرآن الكريم وخاصته 📖',
+        world: 'روضة الفردوس والقرآن', icon: '📖', enemyEmoji: '🌟', bossEmoji: '🕊️',
+        bossTitle: 'طائر النور والبركة 🕊️✨',
+        bg1: '#064E3B', bg2: '#022C22', waves: 4, speed: 2.0
+      }
+    ];
+
+    /*************************************************************************
+     * ب. بنك الأسئلة المحقق 100% (Zero-Error Verified Question Bank)
+     *************************************************************************/
+    const QUESTION_BANK = [
+      // 1. أسئلة روضة أصحاب القرآن الكريم وخاصته (تظهر في المرحلة 22 وبنك المراجعة)
+      {
+        id: 'qr1', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'ما هي السورة المباركة التي تُسمى «السبع المثاني» و«أم الكتاب» ولا تصح الصلاة إلا بها؟',
+        options: ['سورة الفاتحة', 'سورة البقرة', 'سورة الإخلاص', 'سورة يس'],
+        correctText: 'سورة الفاتحة',
+        hikmah: 'قال رسول الله ﷺ عن سورة الفاتحة: «هي السبعُ المثاني والقرآنُ العظيمُ الذي أوتيتُه» (رواه البخاري).'
+      },
+      {
+        id: 'qr2', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'ما هي السورة التي تتكون من ثلاثين آية، وتشفع لصاحبها حتى يُغفر له وتنجيه من عذاب القبر؟',
+        options: ['سورة الملك (تبارك)', 'سورة القلم', 'سورة النبأ', 'سورة الرحمن'],
+        correctText: 'سورة الملك (تبارك)',
+        hikmah: 'قال النبي ﷺ: «إنَّ سورةً من القرآنِ ثلاثون آيةً شفعت لرجلٍ حتى غُفِرَ له، وهي سورةُ تباركَ الذي بيدِه الملكُ» (رواه أبو داود والترمذي وحسنه).'
+      },
+      {
+        id: 'qr3', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'ماذا يُلبس والدا حافظ القرآن العامل به يوم القيامة تكريماً لهما؟',
+        options: ['تاج الوقار ضوؤه أحسن من ضوء الشمس', 'خاتم من فضة', 'وشاح من حرير فقط', 'درع من حديد'],
+        correctText: 'تاج الوقار ضوؤه أحسن من ضوء الشمس',
+        hikmah: 'يُلبس والدا صاحب القرآن تاج الوقار يوم القيامة، ويُقال لحافظ القرآن: «اقرأ وارتقِ ورتِّل كما كنت ترتل في الدنيا، فإن منزلتك عند آخر آية تقرؤها».'
+      },
+      {
+        id: 'qr4', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'بكم حسنة يثاب المسلم على قراءة الحرف الواحد من كتاب الله عز وجل؟',
+        options: ['حسنة والحسنة بعشر أمثالها', 'حسنة واحدة فقط', 'ثلاث حسنات', 'خمس حسنات'],
+        correctText: 'حسنة والحسنة بعشر أمثالها',
+        hikmah: 'قال رسول الله ﷺ: «من قرأ حرفاً من كتاب الله فله به حسنة، والحسنة بعشر أمثالها، لا أقول الم حرف، ولكن ألف حرف ولام حرف وميم حرف» (رواه الترمذي).'
+      },
+      {
+        id: 'qr5', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'ما هو الأدب الواجب على المسلم عند البدء بتلاوة القرآن الكريم؟',
+        options: ['الاستعاذة بالله من الشيطان الرجيم والبسملة والتدبر', 'القراءة السريعة دون فهم', 'الضحك أثناء القراءة', 'مقاطعة القارئ'],
+        correctText: 'الاستعاذة بالله من الشيطان الرجيم والبسملة والتدبر',
+        hikmah: 'قال الله تعالى: ﴿فَإِذَا قَرَأْتَ الْقُرْآنَ فَاسْتَعِذْ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ﴾ (النحل: 98).'
+      },
+      {
+        id: 'qr6', category: 'روضة القرآن الكريم', age: 'all',
+        q: 'ما هي أعظم آية في القرآن الكريم؟',
+        options: ['آية الكرسي (البقرة: 255)', 'آية الدَّين', 'آية النور', 'آخر آية من سورة الكهف'],
+        correctText: 'آية الكرسي (البقرة: 255)',
+        hikmah: 'آية الكرسي ﴿اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ﴾ هي أعظم آية في كتاب الله كما ثبت في صحيح مسلم.'
+      },
+
+      // 2. أسئلة تحدي العباقرة وأذكياء المستقبل (تظهر في المرحلة 21 وبنك المراجعة)
+      {
+        id: 'gn1', category: 'تحدي العباقرة', age: 'all',
+        q: 'أكمل المتتابعة الحسابية الذكية التالية: ( 2 ، 4 ، 8 ، 16 ، ... )؟',
+        options: ['32', '24', '20', '30'],
+        correctText: '32',
+        hikmah: 'كل رقم في هذه المتتابعة الهندسية يتضاعف (× 2): 16 × 2 = 32!'
+      },
+      {
+        id: 'gn2', category: 'تحدي العباقرة', age: 'all',
+        q: 'أكمل المتتابعة المنطقية: ( 3 ، 7 ، 11 ، 15 ، ... )؟',
+        options: ['19', '18', '20', '21'],
+        correctText: '19',
+        hikmah: 'الفرق الثابت بين كل رقمين هو (+4): 15 + 4 = 19.'
+      },
+      {
+        id: 'gn3', category: 'تحدي العباقرة', age: 'all',
+        q: 'سفينة فضائية تقطع 60 كيلومتراً في الساعة، فكم كيلومتراً تقطع في نصف ساعة (30 دقيقة)؟',
+        options: ['30 كيلومتراً', '20 كيلومتراً', '45 كيلومتراً', '60 كيلومتراً'],
+        correctText: '30 كيلومتراً',
+        hikmah: 'نصف المسافة في نصف الزمن: 60 ÷ 2 = 30 كيلومتراً.'
+      },
+      {
+        id: 'gn4', category: 'تحدي العباقرة', age: 'all',
+        q: 'إذا كان لديك 3 صناديق، وفي كل صندوق 4 علب، وفي كل علبة عملتان ذهبيتان، فكم إجمالي العملات؟',
+        options: ['24 عملة ذهبية', '12 عملة ذهبية', '18 عملة ذهبية', '9 عملات ذهبية'],
+        correctText: '24 عملة ذهبية',
+        hikmah: 'حاصل الضرب: 3 × 4 × 2 = 24 عملة ذهبية!'
+      },
+      {
+        id: 'gn5', category: 'تحدي العباقرة', age: 'all',
+        q: 'لغز سرعة البديهة: شيء يمشي بلا أرجل ويبكي بلا عيون، فما هو؟',
+        options: ['السحاب (الغيم)', 'الرياح', 'الساعة', 'القمر'],
+        correctText: 'السحاب (الغيم)',
+        hikmah: 'السحاب يتحرك في السماء بقدرة الله وينزل منه المطر كأنه يبكي فيحيي الأرض بعد موتها.'
+      },
+
+      // 3. أسئلة العقيدة والسيرة والعلوم العامة (المراحل 1 - 20)
+      {
+        id: 'bs1', category: 'العقيدة والأركان', age: '5-8',
+        q: 'ما هو الركن الأول من أركان الإسلام الخمسة؟',
+        options: ['شهادة أن لا إله إلا الله وأن محمداً رسول الله', 'إقام الصلاة', 'إيتاء الزكاة', 'صوم رمضان'],
+        correctText: 'شهادة أن لا إله إلا الله وأن محمداً رسول الله',
+        hikmah: 'الشهادتان هما مفتاح الدخول في الإسلام وأساس التوحيد.'
+      },
+      {
+        id: 'bs2', category: 'قصص الأنبياء', age: '9-12',
+        q: 'من هو النبي الكريم الذي جعله الله ناراً برداً وسلاماً عليه حين ألقاه قومه فيها؟',
+        options: ['إبراهيم الخليل عليه السلام', 'موسى كليم الله عليه السلام', 'عيسى عليه السلام', 'سليمان عليه السلام'],
+        correctText: 'إبراهيم الخليل عليه السلام',
+        hikmah: 'قال الله تعالى: ﴿قُلْنَا يَا نَارُ كُونِي بَرْدًا وَسَلَامًا عَلَىٰ إِبْرَاهِيمَ﴾ (الأنبياء: 69).'
+      },
+      {
+        id: 'bs3', category: 'السيرة النبوية', age: '9-12',
+        q: 'في أي شهر هجري فُرض الصيام وأُنزل القرآن الكريم؟',
+        options: ['شهر رمضان المبارك', 'شهر رجب', 'شهر شعبان', 'شهر ذي الحجة'],
+        correctText: 'شهر رمضان المبارك',
+        hikmah: 'قال الله تعالى: ﴿شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ هُدًى لِّلنَّاسِ﴾ (البقرة: 185).'
+      },
+      {
+        id: 'bs4', category: 'العلوم والحضارة', age: '13-16',
+        q: 'من هو العالم المسلم رائد علم البصريات الذي شرح كيفية إبصار العين للضوء؟',
+        options: ['الحسن بن الهيثم', 'عباس بن فرناس', 'الإدريسي', 'البيروني'],
+        correctText: 'الحسن بن الهيثم',
+        hikmah: 'الحسن بن الهيثم ألّف كتاب (المناظر) وأثبت أن العين تبصر بانعكاس الضوء من الأجسام إليها.'
+      },
+      {
+        id: 'bs5', category: 'الأخلاق والآداب', age: '5-8',
+        q: 'ما هي تحية أهل الإسلام في الدنيا وتحية أهل الجنة؟',
+        options: ['السلام عليكم ورحمة الله وبركاته', 'صباح الخير فقط', 'مرحباً بكم', 'أهلاً وسهلاً'],
+        correctText: 'السلام عليكم ورحمة الله وبركاته',
+        hikmah: 'إفشاء السلام ينشر المحبة والمودة بين المسلمين ويزيد الحسنات.'
+      }
+    ];
+
+    const QURAN_OASIS_VERSES = [
+      {
+        title: 'فضل أهل القرآن وتاج الوقار',
+        ayah: '﴿إِنَّ الَّذِينَ يَتْلُونَ كِتَابَ اللَّهِ وَأَقَامُوا الصَّلَاةَ وَأَنفَقُوا مِمَّا رَزَقْنَاهُمْ سِرًّا وَعَلَانِيَةً يَرْجُونَ تِجَارَةً لَّن تَبُورَ﴾',
+        tafsir: 'تلاوة القرآن الكريم والعمل به هي التجارة الرابحة مع الله التي لا تخسر أبداً، وترفع صاحبها ووالديه في الجنة.',
+        audioUrl: 'https://server8.mp3quran.net/afs/001.mp3'
+      },
+      {
+        title: 'سورة الملك (المنجية من عذاب القبر)',
+        ayah: '﴿تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ * الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا﴾',
+        tafsir: 'سورة الملك ثلاثون آية تشفع لصاحبها الذي يواظب على قراءتها كل ليلة.',
+        audioUrl: 'https://server8.mp3quran.net/afs/067.mp3'
+      },
+      {
+        title: 'سورة الإخلاص (تعدل ثلث القرآن)',
+        ayah: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ * اللَّهُ الصَّمَدُ * لَمْ يَلِدْ وَلَمْ يُولَدْ * وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ﴾',
+        tafsir: 'سورة التوحيد الخالص لله عز وجل، قراءتها مرة واحدة تعدل ثلث القرآن في الأجر والثواب.',
+        audioUrl: 'https://server8.mp3quran.net/afs/112.mp3'
+      },
+      {
+        title: 'آداب التلاوة والإنصات للقرآن',
+        ayah: '﴿وَإِذَا قُرِئَ الْقُرْآنُ فَاسْتَمِعُوا لَهُ وَأَنصِتُوا لَعَلَّكُمْ تُرْحَمُونَ﴾',
+        tafsir: 'الاستماع والإنصات بخشوع وتدبر لآيات الله سبب لنزول رحمة الله وسكينته على القلوب.',
+        audioUrl: 'https://server8.mp3quran.net/afs/114.mp3'
+      }
+    ];
+
+    /*************************************************************************
+     * ج. حالة اللعبة ونظام الحفظ المحلي والسحابي (State & Dual Sync)
+     *************************************************************************/
+    const STORAGE_KEY = 'hoor_game_architect_v3';
+    let appState = {
+      heroName: 'حور',
+      email: '',
+      avatar: '',
+      ageTier: '9-12',
+      stars: 120,
+      coins: 50,
+      crowns: 1,
+      unlockedStage: 1,
+      currentStageId: 1,
+      weaponLevel: 1,
+      leaderboard: [
+        { name: 'حور البطلة', stars: 650, coins: 310, crowns: 4, badge: '👑 حافظة القرآن' },
+        { name: 'أحمد المستكشف', stars: 520, coins: 240, crowns: 2, badge: '🧠 عبقري المستقبل' },
+        { name: 'مريم النور', stars: 480, coins: 195, crowns: 3, badge: '🌟 نجمة المعرفة' }
+      ]
+    };
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character]));
+    }
+
+    function sanitizeState(candidate) {
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return appState;
+      const next = { ...appState };
+      if (typeof candidate.heroName === 'string') next.heroName = candidate.heroName.trim().slice(0, 32) || 'حور';
+      if (['5-8', '9-12', '13-16'].includes(candidate.ageTier)) next.ageTier = candidate.ageTier;
+      for (const key of ['stars', 'coins', 'crowns', 'unlockedStage', 'currentStageId', 'weaponLevel']) {
+        if (Number.isSafeInteger(candidate[key]) && candidate[key] >= 0 && candidate[key] <= 1000000) next[key] = candidate[key];
+      }
+      if (Array.isArray(candidate.leaderboard)) {
+        next.leaderboard = candidate.leaderboard.slice(0, 100).filter(row => row && typeof row === 'object').map(row => ({
+          name: typeof row.name === 'string' ? row.name.trim().slice(0, 32) || 'بطل حور' : 'بطل حور',
+          stars: Number.isSafeInteger(row.stars) && row.stars >= 0 ? Math.min(row.stars, 1000000) : 0,
+          coins: Number.isSafeInteger(row.coins) && row.coins >= 0 ? Math.min(row.coins, 1000000) : 0,
+          crowns: Number.isSafeInteger(row.crowns) && row.crowns >= 0 ? Math.min(row.crowns, 1000000) : 0,
+          badge: typeof row.badge === 'string' ? row.badge.slice(0, 80) : '🚀 بطل النور'
+        }));
+      }
+      return next;
+    }
+
+    function loadAppState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = sanitizeState(parsed);
+        }
+      } catch (e) {}
+      refreshHeaderUI();
+      renderStagesMap('all');
+      renderQuranOasisSection();
+      renderCatalogSection('الكل');
+      renderLeaderboardTable();
+    }
+
+    function saveAppState() {
+      try {
+        // تحديث موقع اللاعب في لوحة المتصدرين
+        const existingIdx = appState.leaderboard.findIndex(p => p.name === appState.heroName);
+        const heroEntry = {
+          name: appState.heroName,
+          stars: appState.stars,
+          coins: appState.coins,
+          crowns: appState.crowns,
+          badge: appState.crowns >= 2 ? '👑 تاج الوقار' : '🚀 بطل النور'
+        };
+        if (existingIdx >= 0) {
+          appState.leaderboard[existingIdx] = heroEntry;
+        } else {
+          appState.leaderboard.push(heroEntry);
+        }
+        appState.leaderboard.sort((a, b) => b.stars - a.stars);
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {}
+      refreshHeaderUI();
+      renderLeaderboardTable();
+    }
+
+    function refreshHeaderUI() {
+      document.getElementById('statStars').textContent = appState.stars;
+      document.getElementById('statCoins').textContent = appState.coins;
+      document.getElementById('statCrowns').textContent = appState.crowns;
+      document.getElementById('headerHeroInfo').textContent = `البطل: ${appState.heroName} (${appState.ageTier} سنة)`;
+      const av = document.getElementById('headerAvatar');
+      if (appState.avatar) {
+        av.src = appState.avatar;
+        av.classList.remove('hidden');
+      }
+    }
+
+    /*************************************************************************
+     * د. بوابة الدخول الآمنة وحساب جوجل (Google JWT & Guest Entry)
+     *************************************************************************/
+    function enterGameAsGuest() {
+      const nameVal = document.getElementById('portalHeroName').value.trim() || 'حور';
+      const ageVal = document.getElementById('portalAgeTier').value;
+      appState.heroName = nameVal;
+      appState.ageTier = ageVal;
+      saveAppState();
+      document.getElementById('portalOverlay').classList.add('hidden');
+      playSfx('powerup');
+    }
+
+    function openPortalModal() {
+      gameActive = false;
+      document.getElementById('portalHeroName').value = appState.heroName;
+      document.getElementById('portalAgeTier').value = appState.ageTier;
+      document.getElementById('portalOverlay').classList.remove('hidden');
+    }
+
+    // Authentication is intentionally handled by the outer application shell.
+    // This standalone document never decodes or trusts browser-provided JWTs.
+    function handleGoogleJwtResponse() {
+      console.warn('External sign-in is disabled in the standalone game document.');
+    }
+
+    /*************************************************************************
+     * هـ. المحرك الصوتي الديناميكي (Web Audio API Synthesizer + Quran Stream)
+     *************************************************************************/
+    let audioEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      return audioCtx;
+    }
+
+    function playSfx(type) {
+      if (!audioEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        if (type === 'laser') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(720, now);
+          osc.frequency.exponentialRampToValueAtTime(260, now + 0.08);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'coin') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.setValueAtTime(1174, now + 0.06);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        } else if (type === 'powerup' || type === 'victory') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(90, now + 0.15);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('soundBtn').textContent = audioEnabled ? '🔊 الصوت' : '🔇 صامت';
+    }
+
+    function markQuranListened() {
+      stageProgress.quranListened = true;
+      const statusEl = document.getElementById('miniQuranStatus');
+      if (statusEl) statusEl.textContent = 'تم الاستماع';
+      updateStageCompletionGate();
+      saveAppState();
+    }
+
+    function toggleQuranAudio(customUrl) {
+      const player = document.getElementById('quranAudioPlayer');
+      const statusEl = document.getElementById('miniQuranStatus');
+      const selectedUrl = customUrl || document.getElementById('miniSurahSelect').value;
+
+      if (!player.paused && (!customUrl || player.src === customUrl)) {
+        player.pause();
+        statusEl.textContent = 'متوقف مؤقتاً';
+      } else {
+        if (customUrl && player.src !== customUrl) player.currentTime = 0;
+        player.src = selectedUrl;
+        player.play().then(() => {
+          statusEl.textContent = 'يتم الاستماع...';
+        }).catch(() => {
+          statusEl.textContent = 'تعذر التشغيل — تحقق من الاتصال';
+          playSfx('powerup');
+        });
+      }
+    }
+
+    document.getElementById('quranAudioPlayer').addEventListener('ended', markQuranListened);
+
+    /*************************************************************************
+     * و. محرك الأركيد الكلاسيكي (Chicken Invaders + Bosses + Stage 21 & 22)
+     *************************************************************************/
+    const canvas = document.getElementById('arcadeCanvas');
+    const c = canvas.getContext('2d');
+
+    let gameActive = false;
+    let currentWave = 1;
+    let stageScore = 0;
+    let playerLives = 3;
+    let shieldTicks = 0;
+    let shootCooldown = 0;
+
+    const ship = { x: 350, y: 420, w: 60, h: 46, targetX: 350 };
+    let bullets = [];
+    let invaders = [];
+    let enemyProjectiles = [];
+    let drops = [];
+    let starsBg = Array.from({ length: 45 }, () => ({
+      x: Math.random() * 760,
+      y: Math.random() * 480,
+      r: 1 + Math.random() * 2,
+      s: 0.4 + Math.random() * 0.8
+    }));
+    let activeBoss = null;
+
+    function getActiveStageObj() {
+      return ALL_STAGES.find(s => s.id === appState.currentStageId) || ALL_STAGES[0];
+    }
+
+    // كل مرحلة أطول: نضيف موجتين تدريبيتين قبل موجة الزعيم.
+    function getStageWaveCount(stg) {
+      return stg.waves + 2;
+    }
+
+    let stageProgress = {
+      battleCleared: false,
+      quizPassed: false,
+      quranListened: false
+    };
+
+    function resetStageProgress() {
+      stageProgress = { battleCleared: false, quizPassed: false, quranListened: false };
+      const player = document.getElementById('quranAudioPlayer');
+      if (player) {
+        player.pause();
+        player.currentTime = 0;
+      }
+      const status = document.getElementById('miniQuranStatus');
+      if (status) status.textContent = 'متوقف';
+    }
+
+    function initStageWave(waveNum) {
+      const stg = getActiveStageObj();
+      currentWave = waveNum;
+      invaders = [];
+      enemyProjectiles = [];
+      activeBoss = null;
+      document.getElementById('bossHealthBarWrap').classList.add('hidden');
+
+      // إذا كانت الموجة الأخيرة في المرحلة -> ظهور زعيم المرحلة!
+      if (waveNum >= getStageWaveCount(stg)) {
+        const isQuranStage = stg.id === 22;
+        const isGeniusStage = stg.id === 21;
+        const maxHp = isQuranStage ? 18 : isGeniusStage ? 35 : 15 + stg.id * 2;
+        activeBoss = {
+          x: 310, y: 70, w: 120, h: 90,
+          vx: 2.4,
+          hp: maxHp,
+          maxHp: maxHp,
+          emoji: stg.bossEmoji,
+          isPeaceful: isQuranStage,
+          title: stg.bossTitle || `زعيم ${stg.name}`
+        };
+        document.getElementById('bossNameLabel').textContent = `${activeBoss.emoji} ${activeBoss.title}`;
+        document.getElementById('bossHealthFill').style.width = '100%';
+        document.getElementById('bossHealthBarWrap').classList.remove('hidden');
+      } else {
+        // تشكيل موجات بأسلوب Chicken Invaders الكلاسيكي
+        const rows = stg.id === 22 ? 2 : 3;
+        const cols = 7;
+        for (let r = 0; r < rows; r++) {
+          for (let col = 0; col < cols; col++) {
+            invaders.push({
+              x: 95 + col * 85,
+              y: 55 + r * 55,
+              w: 44,
+              h: 44,
+              vx: stg.speed * 0.8,
+              hp: stg.id > 10 ? 2 : 1,
+              emoji: stg.enemyEmoji
+            });
+          }
+        }
+      }
+      updateSideHUD();
+    }
+
+    function updateSideHUD() {
+      const stg = getActiveStageObj();
+      document.getElementById('sideStageBadge').textContent = `المرحلة ${stg.id} من 22 • ${stg.world}`;
+      document.getElementById('sideStageTitle').textContent = stg.name;
+      document.getElementById('sideStageIcon').textContent = stg.icon;
+      document.getElementById('hudWave').textContent = `${currentWave} / ${getStageWaveCount(stg)}`;
+      document.getElementById('hudWeapon').textContent = `⚡ المستوى ${appState.weaponLevel}`;
+      document.getElementById('hudLives').textContent = '❤️'.repeat(Math.max(1, playerLives));
+      document.getElementById('hudScore').textContent = stageScore;
+
+      if (stg.id === 22) {
+        document.getElementById('sideStageDesc').textContent =
+          'روضة أصحاب القرآن الكريم: اجمع أنوار الآيات ومخطوطات السبع المثاني وسورة الملك مع طائر النور والبركة لتفوز بتاج الوقار 👑!';
+      } else if (stg.id === 21) {
+        document.getElementById('sideStageDesc').textContent =
+          'تحدي العباقرة وأذكياء المستقبل: واجه زعيم العباقرة الخارق وحل ألغاز المتتابعات الحسابية وسرعة البديهة 🧠!';
+      } else {
+        document.getElementById('sideStageDesc').textContent =
+          `تقدم عبر موجات (${stg.name}) واجمع العملات الذهبية ومخطوطات الحكمة التعليمية!`;
+      }
+    }
+
+    function launchStageDirect(stageId) {
+      const stg = ALL_STAGES.find(s => s.id === stageId);
+      if (!stg) return;
+
+      // المراحل 21 و 22 مفتوحة دائماً للوصول السريع كما في المتطلبات
+      if (stageId <= 20 && stageId > appState.unlockedStage) {
+        alert(`🔒 هذه المرحلة تفتح بعد إتمام المرحلة ${stageId - 1}، أو يمكنك تجربة المرحلتين 21 و 22 فوراً!`);
+        return;
+      }
+
+      appState.currentStageId = stageId;
+      resetStageProgress();
+      stageScore = 0;
+      playerLives = 3;
+      bullets = [];
+      drops = [];
+      initStageWave(1);
+      switchMainView('play', document.querySelectorAll('.nav-tab')[0]);
+      gameActive = true;
+      document.getElementById('btnStartPause').textContent = 'إيقاف مؤقت';
+      playSfx('powerup');
+    }
+
+    function toggleGameLoop() {
+      gameActive = !gameActive;
+      document.getElementById('btnStartPause').textContent = gameActive ? 'إيقاف مؤقت' : 'استئناف المعركة';
+      if (gameActive) playSfx('powerup');
+    }
+
+    function playerShoot() {
+      if (!gameActive) return;
+      playSfx('laser');
+      const cx = ship.x + ship.w / 2;
+      if (appState.weaponLevel === 1) {
+        bullets.push({ x: cx, y: ship.y, vx: 0, vy: -8.5 });
+      } else if (appState.weaponLevel === 2) {
+        bullets.push({ x: cx - 12, y: ship.y, vx: -0.6, vy: -8.5 });
+        bullets.push({ x: cx + 12, y: ship.y, vx: 0.6, vy: -8.5 });
+      } else {
+        bullets.push({ x: cx, y: ship.y - 4, vx: 0, vy: -9 });
+        bullets.push({ x: cx - 16, y: ship.y, vx: -1.4, vy: -8.5 });
+        bullets.push({ x: cx + 16, y: ship.y, vx: 1.4, vy: -8.5 });
+      }
+    }
+
+    function moveTouch(delta) {
+      ship.targetX = Math.max(20, Math.min(canvas.width - ship.w - 20, ship.targetX + delta));
+    }
+
+    canvas.addEventListener('pointermove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const x = (e.clientX - rect.left) * scaleX;
+      ship.targetX = Math.max(20, Math.min(canvas.width - ship.w - 20, x - ship.w / 2));
+    });
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') moveTouch(-36);
+      if (e.key === 'ArrowRight') moveTouch(36);
+      if (e.key === ' ') {
+        e.preventDefault();
+        playerShoot();
+      }
+    });
+
+    function spawnCollectible(x, y) {
+      const r = Math.random();
+      let type = 'coin'; // 🪙 عملة ذهبية
+      if (r > 0.82) type = 'scroll'; // 📜 مخطوطة سؤال
+      else if (r > 0.72) type = 'upgrade'; // ⚡ ترقية سلاح النور
+      else if (r > 0.64) type = 'shield'; // 🛡️ درع واقي
+      drops.push({ x, y, type, vy: 2.3 });
+    }
+
+    function renderArcadeFrame() {
+      const stg = getActiveStageObj();
+
+      // خلفية متدرجة خاصة بكل عالم
+      const grad = c.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, stg.bg1);
+      grad.addColorStop(1, stg.bg2);
+      c.fillStyle = grad;
+      c.fillRect(0, 0, canvas.width, canvas.height);
+
+      // نجوم الفضاء أو زهور الروضة في الخلفية
+      c.fillStyle = stg.id === 22 ? 'rgba(253, 230, 138, 0.45)' : 'rgba(255, 255, 255, 0.35)';
+      starsBg.forEach(st => {
+        if (gameActive) {
+          st.y += st.s;
+          if (st.y > canvas.height) st.y = 0;
+        }
+        c.beginPath();
+        c.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+        c.fill();
+      });
+
+      // أشجار الجنة الرمزية في المرحلة 22 (روضة أصحاب القرآن)
+      if (stg.id === 22) {
+        c.font = '32px sans-serif';
+        c.fillText('🌴', 45, 455);
+        c.fillText('🌴', 715, 455);
+      }
+
+      if (gameActive) {
+        ship.x += (ship.targetX - ship.x) * 0.22;
+        if (shieldTicks > 0) shieldTicks--;
+
+        // إطلاق تلقائي مريح للأطفال كل 22 إطاراً
+        shootCooldown++;
+        if (shootCooldown >= 22) {
+          playerShoot();
+          shootCooldown = 0;
+        }
+
+        // تحريك طلقات النور
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const b = bullets[i];
+          b.x += b.vx;
+          b.y += b.vy;
+          if (b.y < -10) bullets.splice(i, 1);
+        }
+
+        // تحريك تشكيلة الغزاة (Chicken Invaders Formation)
+        let reverseDir = false;
+        invaders.forEach(inv => {
+          inv.x += inv.vx;
+          if (inv.x < 30 || inv.x > canvas.width - 60) reverseDir = true;
+          if (Math.random() < 0.0025) {
+            enemyProjectiles.push({
+              x: inv.x + 18,
+              y: inv.y + 30,
+              vy: 3.2,
+              emoji: stg.id === 22 ? '✨' : '🥚',
+              harmless: stg.id === 22
+            });
+          }
+        });
+        if (reverseDir) {
+          invaders.forEach(inv => {
+            inv.vx *= -1;
+            inv.y += 12;
+          });
+        }
+
+        // تحريك زعيم المرحلة (Boss Logic)
+        if (activeBoss) {
+          activeBoss.x += activeBoss.vx;
+          if (activeBoss.x < 50 || activeBoss.x > canvas.width - activeBoss.w - 50) {
+            activeBoss.vx *= -1;
+          }
+          if (Math.random() < 0.035) {
+            if (activeBoss.isPeaceful) {
+              // طائر النور والبركة يرسل عملات ومخطوطات قرآنية مباركة بدلاً من الأذى!
+              spawnCollectible(activeBoss.x + 50, activeBoss.y + 70);
+            } else {
+              enemyProjectiles.push({
+                x: activeBoss.x + 55,
+                y: activeBoss.y + 80,
+                vy: stg.id === 21 ? 5.0 : 3.8,
+                emoji: stg.id === 21 ? '⚡' : '🔥',
+                harmless: false
+              });
+            }
+          }
+        }
+
+        // فحص تصادم طلقات اللاعب مع الغزاة أو الزعيم
+        for (let bi = bullets.length - 1; bi >= 0; bi--) {
+          const b = bullets[bi];
+          let bulletRemoved = false;
+
+          for (let ii = invaders.length - 1; ii >= 0; ii--) {
+            const inv = invaders[ii];
+            if (b.x > inv.x && b.x < inv.x + inv.w && b.y > inv.y && b.y < inv.y + inv.h) {
+              inv.hp--;
+              bullets.splice(bi, 1);
+              bulletRemoved = true;
+              if (inv.hp <= 0) {
+                stageScore += 15;
+                appState.stars += 2;
+                if (Math.random() < 0.42) spawnCollectible(inv.x, inv.y);
+                invaders.splice(ii, 1);
+                playSfx('coin');
+              }
+              break;
+            }
+          }
+
+          if (!bulletRemoved && activeBoss) {
+            if (b.x > activeBoss.x && b.x < activeBoss.x + activeBoss.w && b.y > activeBoss.y && b.y < activeBoss.y + activeBoss.h) {
+              activeBoss.hp--;
+              bullets.splice(bi, 1);
+              const pct = Math.max(0, Math.round((activeBoss.hp / activeBoss.maxHp) * 100));
+              document.getElementById('bossHealthFill').style.width = pct + '%';
+
+              if (activeBoss.hp <= 0) {
+                // هزيمة الزعيم أو إتمام روضة القرآن!
+                playSfx('victory');
+                appState.stars += 100;
+                appState.coins += 50;
+                if (stg.id === 22) appState.crowns += 1;
+                activeBoss = null;
+                stageProgress.battleCleared = true;
+                gameActive = false;
+                document.getElementById('bossHealthBarWrap').classList.add('hidden');
+                saveAppState();
+                renderStagesMap('all');
+                openQuizStation(true);
+              }
+            }
+          }
+        }
+
+        // الانتقال للموجة التالية عند انتهاء الغزاة
+        if (invaders.length === 0 && !activeBoss) {
+          if (currentWave < getStageWaveCount(stg)) {
+            initStageWave(currentWave + 1);
+            // فتح محطة سؤال تعليمي بين الموجات!
+            openQuizStation(false);
+          }
+        }
+
+        // تحريك مقذوفات الأعداء
+        for (let ei = enemyProjectiles.length - 1; ei >= 0; ei--) {
+          const ep = enemyProjectiles[ei];
+          ep.y += ep.vy;
+          if (ep.x > ship.x && ep.x < ship.x + ship.w && ep.y > ship.y && ep.y < ship.y + ship.h) {
+            if (ep.harmless) {
+              appState.stars += 10;
+              playSfx('coin');
+            } else if (shieldTicks <= 0) {
+              playerLives--;
+              playSfx('hit');
+              if (playerLives <= 0) {
+                playerLives = 3;
+                appState.weaponLevel = 1;
+              }
+            }
+            enemyProjectiles.splice(ei, 1);
+            updateSideHUD();
+            continue;
+          }
+          if (ep.y > canvas.height + 20) enemyProjectiles.splice(ei, 1);
+        }
+
+        // تحريك الهدايا المتساقطة (Coins, Scrolls, Upgrades, Shields)
+        for (let di = drops.length - 1; di >= 0; di--) {
+          const d = drops[di];
+          d.y += d.vy;
+          if (d.x > ship.x - 15 && d.x < ship.x + ship.w + 15 && d.y > ship.y - 10 && d.y < ship.y + ship.h + 10) {
+            if (d.type === 'coin') {
+              appState.coins += 5;
+              appState.stars += 5;
+              playSfx('coin');
+            } else if (d.type === 'upgrade') {
+              appState.weaponLevel = Math.min(3, appState.weaponLevel + 1);
+              playSfx('powerup');
+            } else if (d.type === 'shield') {
+              shieldTicks = 300;
+              playSfx('powerup');
+            } else if (d.type === 'scroll') {
+              playSfx('powerup');
+              openQuizStation(false);
+            }
+            drops.splice(di, 1);
+            saveAppState();
+            updateSideHUD();
+            continue;
+          }
+          if (d.y > canvas.height + 20) drops.splice(di, 1);
+        }
+      }
+
+      // رسم طلقات النور
+      c.fillStyle = stg.id === 21 ? '#38BDF8' : '#FBBF24';
+      bullets.forEach(b => {
+        c.beginPath();
+        c.arc(b.x, b.y, 4.5, 0, Math.PI * 2);
+        c.fill();
+      });
+
+      // رسم الغزاة
+      c.font = '30px sans-serif';
+      c.textAlign = 'center';
+      invaders.forEach(inv => {
+        c.fillText(inv.emoji, inv.x + 20, inv.y + 32);
+      });
+
+      // رسم الزعيم
+      if (activeBoss) {
+        if (stg.id === 21) {
+          // درع نيون كوزميك لزعيم العباقرة
+          c.strokeStyle = '#A855F7';
+          c.lineWidth = 3;
+          c.beginPath();
+          c.arc(activeBoss.x + 60, activeBoss.y + 45, 58, 0, Math.PI * 2);
+          c.stroke();
+        } else if (stg.id === 22) {
+          // هالة ذهبية لطائر النور والبركة
+          c.strokeStyle = '#FBBF24';
+          c.lineWidth = 3;
+          c.beginPath();
+          c.arc(activeBoss.x + 60, activeBoss.y + 45, 58, 0, Math.PI * 2);
+          c.stroke();
+        }
+        c.font = '68px sans-serif';
+        c.fillText(activeBoss.emoji, activeBoss.x + 60, activeBoss.y + 68);
+      }
+
+      // رسم المقذوفات والهدايا
+      c.font = '24px sans-serif';
+      enemyProjectiles.forEach(ep => c.fillText(ep.emoji, ep.x, ep.y));
+      drops.forEach(d => {
+        const icon = d.type === 'coin' ? '🪙' : d.type === 'scroll' ? '📜' : d.type === 'upgrade' ? '⚡' : '🛡️';
+        c.fillText(icon, d.x, d.y);
+      });
+
+      // رسم مركبة صقر النور الخاصة بالبطل
+      c.save();
+      if (shieldTicks > 0) {
+        c.strokeStyle = '#10B981';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(ship.x + ship.w / 2, ship.y + 22, 42, 0, Math.PI * 2);
+        c.stroke();
+      }
+      c.font = '40px sans-serif';
+      c.fillText(stg.id === 22 ? '🕌' : '🚀', ship.x + ship.w / 2, ship.y + 34);
+      c.restore();
+
+      requestAnimationFrame(renderArcadeFrame);
+    }
+
+    /*************************************************************************
+     * ز. نظام محطات الأسئلة المحققة (Zero-Bug Verified Quiz Station)
+     *************************************************************************/
+    let currentQuizObj = null;
+
+    function shuffleSafe(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function openQuizStation(isStageClearBonus = false) {
+      gameActive = false;
+      document.getElementById('btnStartPause').textContent = 'استئناف المعركة';
+
+      const stg = getActiveStageObj();
+      let pool = QUESTION_BANK;
+      if (stg.id === 22) {
+        pool = QUESTION_BANK.filter(q => q.category === 'روضة القرآن الكريم');
+      } else if (stg.id === 21) {
+        pool = QUESTION_BANK.filter(q => q.category === 'تحدي العباقرة');
+      } else {
+        const agePool = QUESTION_BANK.filter(q => q.age === appState.ageTier || q.age === 'all');
+        if (agePool.length > 0) pool = agePool;
+      }
+
+      const raw = pool[Math.floor(Math.random() * pool.length)];
+      const uniqueOpts = Array.from(new Set(raw.options));
+      const shuffledOpts = shuffleSafe(uniqueOpts);
+      const correctIdx = shuffledOpts.indexOf(raw.correctText);
+
+      currentQuizObj = { ...raw, shuffledOpts, correctIdx, isStageClearBonus };
+
+      document.getElementById('quizModalBadge').textContent =
+        isStageClearBonus ? `🎉 سؤال إتمام المرحلة • ${raw.category}` : `📜 محطة الحكمة • ${raw.category}`;
+      document.getElementById('quizModalQuestion').textContent = raw.q;
+
+      const optsWrap = document.getElementById('quizModalOptions');
+      optsWrap.innerHTML = '';
+      shuffledOpts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm transition text-right';
+        btn.textContent = opt;
+        btn.onclick = () => checkQuizStationAnswer(idx, btn);
+        optsWrap.appendChild(btn);
+      });
+
+      document.getElementById('quizModalHikmah').classList.add('hidden');
+      const gate = document.getElementById('stageCompletionGate');
+      gate.classList.toggle('hidden', !isStageClearBonus);
+      document.getElementById('quizModalContinueBtn').classList.add('hidden');
+      document.getElementById('quizModalOverlay').classList.remove('hidden');
+      if (isStageClearBonus) updateStageCompletionGate();
+      document.getElementById('quizModalOverlay').classList.add('flex');
+    }
+
+    function checkQuizStationAnswer(selectedIdx, clickedBtn) {
+      const allBtns = document.querySelectorAll('#quizModalOptions button');
+      allBtns.forEach(b => b.disabled = true);
+
+      const isRight = selectedIdx === currentQuizObj.correctIdx;
+      if (isRight) {
+        clickedBtn.className = 'w-full p-3.5 rounded-xl bg-emerald-600/40 border-2 border-emerald-400 text-emerald-200 font-extrabold text-sm text-right';
+        if (currentQuizObj.isStageClearBonus) stageProgress.quizPassed = true;
+        appState.stars += 30;
+        appState.coins += 15;
+        stageScore += 30;
+        playSfx('victory');
+      } else {
+        clickedBtn.className = 'w-full p-3.5 rounded-xl bg-rose-600/40 border-2 border-rose-400 text-rose-200 font-bold text-sm text-right';
+        allBtns[currentQuizObj.correctIdx].className = 'w-full p-3.5 rounded-xl bg-emerald-600/40 border-2 border-emerald-400 text-emerald-200 font-extrabold text-sm text-right';
+        playSfx('hit');
+      }
+
+      const hikmahEl = document.getElementById('quizModalHikmah');
+      hikmahEl.innerHTML = `
+        <div class="font-extrabold text-amber-300 mb-1">
+          ${isRight ? '✅ أحسنت يا بطل! إجابة صحيحة (+30 نجمة و +15 عملة)' : '💡 الإجابة الصحيحة: ' + currentQuizObj.correctText}
+        </div>
+        <div>${currentQuizObj.hikmah}</div>
+      `;
+      hikmahEl.classList.remove('hidden');
+      document.getElementById('quizModalContinueBtn').classList.remove('hidden');
+      saveAppState();
+      updateSideHUD();
+      if (currentQuizObj.isStageClearBonus) updateStageCompletionGate();
+    }
+
+    function updateStageCompletionGate() {
+      const gate = document.getElementById('stageCompletionGate');
+      if (!gate || !currentQuizObj?.isStageClearBonus) return;
+      const quizEl = document.getElementById('stageGateQuiz');
+      const quranEl = document.getElementById('stageGateQuran');
+      const continueBtn = document.getElementById('quizModalContinueBtn');
+      quizEl.textContent = stageProgress.quizPassed ? 'السؤال: تمت الإجابة الصحيحة' : 'السؤال: أجب إجابة صحيحة للمتابعة';
+      quranEl.textContent = stageProgress.quranListened ? 'التلاوة: تم الاستماع حتى النهاية' : 'التلاوة: يجب الاستماع حتى النهاية';
+      quizEl.className = stageProgress.quizPassed ? 'text-emerald-300' : 'text-slate-300';
+      quranEl.className = stageProgress.quranListened ? 'text-emerald-300 mt-1' : 'text-slate-300 mt-1';
+      const ready = stageProgress.quizPassed && stageProgress.quranListened;
+      continueBtn.disabled = !ready;
+      continueBtn.classList.toggle('opacity-50', !ready);
+      continueBtn.classList.toggle('cursor-not-allowed', !ready);
+      continueBtn.textContent = ready ? 'انتقال تلقائي إلى المرحلة التالية' : 'أكمل الشرطين للمتابعة';
+    }
+
+    function closeQuizStation() {
+      if (currentQuizObj?.isStageClearBonus) {
+        if (!stageProgress.quizPassed || !stageProgress.quranListened) {
+          updateStageCompletionGate();
+          return;
+        }
+        const finishedStageId = appState.currentStageId;
+        const nextStageId = finishedStageId < ALL_STAGES.length ? finishedStageId + 1 : null;
+        if (finishedStageId <= 20 && appState.unlockedStage < finishedStageId + 1) {
+          appState.unlockedStage = Math.min(20, finishedStageId + 1);
+        }
+        saveAppState();
+        document.getElementById('quizModalOverlay').classList.add('hidden');
+        document.getElementById('quizModalOverlay').classList.remove('flex');
+        currentQuizObj = null;
+        if (nextStageId) {
+          window.setTimeout(() => launchStageDirect(nextStageId), 250);
+        } else {
+          gameActive = false;
+          alert('أحسنت! أتممت جميع مراحل اللعبة.');
+        }
+        return;
+      }
+      document.getElementById('quizModalOverlay').classList.add('hidden');
+      document.getElementById('quizModalOverlay').classList.remove('flex');
+      gameActive = true;
+      document.getElementById('btnStartPause').textContent = 'إيقاف مؤقت';
+    }
+
+    /*************************************************************************
+     * ح. دوال عرض الأقسام (Map 22 Stages, Quran Oasis, Catalog, Leaderboard)
+     *************************************************************************/
+    function switchMainView(viewKey, tabBtn) {
+      const target = document.getElementById('view-' + viewKey);
+      if (!target) return;
+
+      document.querySelectorAll('.main-view').forEach(v => {
+        v.classList.add('hidden');
+        v.setAttribute('aria-hidden', 'true');
+      });
+      target.classList.remove('hidden');
+      target.setAttribute('aria-hidden', 'false');
+
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        const isActive = b.getAttribute('onclick')?.includes(`'${viewKey}'`);
+        b.setAttribute('aria-current', isActive ? 'page' : 'false');
+        b.classList.toggle('bg-emerald-600', isActive);
+        b.classList.toggle('text-white', isActive);
+        b.classList.toggle('bg-slate-800', !isActive);
+        b.classList.toggle('text-slate-300', !isActive);
+      });
+
+      document.querySelectorAll('.mobile-nav-tab').forEach(b => {
+        const isActive = b.getAttribute('onclick')?.includes(`'${viewKey}'`);
+        if (isActive) b.setAttribute('aria-current', 'page');
+        else b.removeAttribute('aria-current');
+      });
+
+      localStorage.setItem('hoor_last_view_v1', viewKey);
+      document.title = ({
+        play: 'ساحة اللعب — حور تلعب وتتعلم',
+        map: 'خريطة المراحل — حور تلعب وتتعلم',
+        quran: 'روضة القرآن — حور تلعب وتتعلم',
+        catalog: 'بنك التدريب — حور تلعب وتتعلم',
+        leaderboard: 'إنجازاتي — حور تلعب وتتعلم'
+      })[viewKey] || 'حور تلعب وتتعلم';
+
+      if (viewKey !== 'play') gameActive = false;
+      if (window.matchMedia('(max-width: 640px)').matches) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function renderStagesMap(filterType) {
+      const grid = document.getElementById('stagesMapGrid');
+      grid.innerHTML = '';
+      const filtered = filterType === 'all' ? ALL_STAGES : ALL_STAGES.filter(s => s.type === filterType);
+
+      filtered.forEach(stg => {
+        const isUnlocked = stg.id >= 21 || stg.id <= appState.unlockedStage;
+        const isSpecial22 = stg.id === 22;
+        const isSpecial21 = stg.id === 21;
+
+        const card = document.createElement('div');
+        card.className = `rounded-2xl p-4 border-2 transition cursor-pointer flex flex-col justify-between ${
+          isSpecial22 ? 'bg-gradient-to-br from-emerald-950 to-amber-950/60 border-amber-400 gold-glow' :
+          isSpecial21 ? 'bg-gradient-to-br from-indigo-950 to-purple-950 border-purple-400 cosmic-glow' :
+          isUnlocked ? 'bg-slate-800/90 border-emerald-500/40 hover:border-amber-400' :
+          'bg-slate-900/60 border-slate-800 opacity-60'
+        }`;
+        card.onclick = () => launchStageDirect(stg.id);
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
+                isSpecial22 ? 'bg-amber-400 text-slate-950' :
+                isSpecial21 ? 'bg-purple-400 text-slate-950' :
+                'bg-slate-700 text-emerald-300'
+              }">
+                المرحلة ${stg.id}
+              </span>
+              <span class="text-2xl">${isUnlocked ? stg.icon : '🔒'}</span>
+            </div>
+            <h4 class="font-extrabold text-sm text-white">${stg.name}</h4>
+            <p class="text-xs text-slate-400 mt-0.5">${stg.world} • ${getStageWaveCount(stg)} موجات</p>
+          </div>
+          <div class="mt-3 pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs font-bold">
+            <span class="${isUnlocked ? 'text-emerald-300' : 'text-slate-500'}">
+              ${isUnlocked ? '▶️ العب الآن' : 'مغلقة'}
+            </span>
+            <span>الزعيم: ${stg.bossEmoji}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderQuranOasisSection() {
+      const grid = document.getElementById('quranCardsGrid');
+      grid.innerHTML = '';
+      QURAN_OASIS_VERSES.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900/90 border border-amber-400/40 rounded-2xl p-5 flex flex-col justify-between';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-extrabold text-amber-300 text-base">${v.title}</h3>
+              <button onclick="toggleQuranAudio('${v.audioUrl}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl">
+                🎧 استمع للتلاوة
+              </button>
+            </div>
+            <div class="font-quran text-xl md:text-2xl text-amber-100 bg-slate-950/70 border-r-4 border-amber-400 p-3.5 rounded-xl my-3 leading-loose">
+              ${v.ayah}
+            </div>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">💡 <strong>الفائدة والتدبر:</strong> ${v.tafsir}</p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderCatalogSection(selectedCategory) {
+      const cats = ['الكل', ...Array.from(new Set(QUESTION_BANK.map(q => q.category)))];
+      const filterWrap = document.getElementById('catalogFilterBtns');
+      filterWrap.innerHTML = '';
+      cats.forEach(cat => {
+        const b = document.createElement('button');
+        b.className = `px-3 py-1.5 rounded-xl text-xs font-bold ${
+          cat === selectedCategory ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-300'
+        }`;
+        b.textContent = cat;
+        b.onclick = () => renderCatalogSection(cat);
+        filterWrap.appendChild(b);
+      });
+
+      const grid = document.getElementById('catalogQuestionsGrid');
+      grid.innerHTML = '';
+      const items = selectedCategory === 'الكل' ? QUESTION_BANK : QUESTION_BANK.filter(q => q.category === selectedCategory);
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800/80 border border-slate-700 rounded-2xl p-4';
+        card.innerHTML = `
+          <span class="inline-block text-[11px] font-bold bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full mb-2">
+            ${item.category}
+          </span>
+          <h4 class="font-extrabold text-sm text-white mb-2">${item.q}</h4>
+          <div class="text-xs font-bold text-amber-300 mb-2">✅ الإجابة الصحيحة: ${item.correctText}</div>
+          <p class="text-xs text-slate-300 leading-relaxed">${item.hikmah}</p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderLeaderboardTable() {
+      const tbody = document.getElementById('leaderboardBody');
+      tbody.innerHTML = '';
+      appState.leaderboard.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-800 hover:bg-slate-800/50';
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-extrabold">${medal}</td>
+          <td class="py-3 px-3 font-bold text-white">${escapeHtml(row.name)}</td>
+          <td class="py-3 px-3 text-xs text-amber-300 font-bold">${escapeHtml(row.badge)}</td>
+          <td class="py-3 px-3 font-extrabold text-amber-400">${row.stars}</td>
+          <td class="py-3 px-3 font-bold text-yellow-300">${row.coins}</td>
+          <td class="py-3 px-3 font-extrabold text-emerald-400">${row.crowns}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /*************************************************************************
+     * ط. التصدير الأوفلاين كملف HTML مفرد + النسخ الاحتياطي (Offline Bundle)
+     *************************************************************************/
+    function downloadStandaloneOfflineGame() {
+      const fullHtml = '<!doctype html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Hoor-Game-Offline-22-Stages.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportSaveFile() {
+      const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hoor-progress-${appState.heroName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importSaveFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          appState = sanitizeState(imported);
+          saveAppState();
+          alert('✅ تمت استعادة ملف التقدم والنجوم بنجاح!');
+        } catch (err) {
+          alert('⚠️ ملف غير صالح.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetAllGameData() {
+      if (confirm('هل أنت متأكد من إعادة تعيين النجوم والمراحل والبدء من جديد؟')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
+
+    function updateNetworkStatus() {
+      const banner = document.getElementById('networkStatus');
+      if (!banner) return;
+      if (navigator.onLine) {
+        banner.classList.remove('is-visible');
+        banner.textContent = '✅ عاد الاتصال — تقدمك محفوظ محلياً';
+        window.setTimeout(() => banner.classList.remove('is-visible'), 1800);
+      } else {
+        banner.textContent = '⚠️ لا يوجد اتصال — سيُحفظ التقدم على هذا الجهاز';
+        banner.classList.add('is-visible');
+      }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // التهيئة الفورية عند تشغيل التطبيق
+    loadAppState();
+    initStageWave(1);
+    requestAnimationFrame(renderArcadeFrame);
+    updateNetworkStatus();
+    const initialView = localStorage.getItem('hoor_last_view_v1');
+    if (initialView && document.getElementById('view-' + initialView)) {
+      const desktopTab = Array.from(document.querySelectorAll('.nav-tab')).find(b => b.getAttribute('onclick')?.includes(`'${initialView}'`));
+      switchMainView(initialView, desktopTab);
+    } else {
+      switchMainView('play', document.querySelector('.nav-tab'));
+    }
+  </script>
+</body>
+</html>
