@@ -860,7 +860,7 @@
         id: 22, type: 'quran', name: 'روضة أصحاب القرآن الكريم وخاصته 📖',
         world: 'روضة الفردوس والقرآن', icon: '📖', enemyEmoji: '🌟', bossEmoji: '🕊️',
         bossTitle: 'طائر النور والبركة 🕊️✨',
-        bg1: '#064E3B', bg2: '#022C22', waves: 4, speed: 2.0
+        bg1: '#064E3B', bg2: '#022C22', waves: 4, speed: 2.0 }, { id: 23, type: 'crown', name: 'المرحلة 23 - تاج الختمة وبطلة المجرة', world: 'عالم التاج والمجرة', icon: '👑', enemyEmoji: '⭐', bossEmoji: '👑', bossTitle: 'ملك مجرة المعرفة 👑✨', bg1: '#312E81', bg2: '#1E1B4B', waves: 5, speed: 2.5, bg2: '#022C22', waves: 4, speed: 2.0
       }
     ];
 
@@ -1099,7 +1099,7 @@
         }
         appState.leaderboard.sort((a, b) => b.stars - a.stars);
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); try { appState.stageProgress = stageProgress; localStorage.setItem('hoor_game_progress_v2', JSON.stringify({ heroName: appState.heroName, stars: appState.stars, coins: appState.coins, crowns: appState.crowns, unlockedStage: appState.unlockedStage, stageProgress, updatedAt: new Date().toISOString() })); localStorage.setItem('hoor_stage_progress_v1', JSON.stringify(stageProgress)); } catch(e){} if (window.parent && window.parent !== window) { window.parent.postMessage({ type: 'HOOR_SAVE_PROGRESS', snapshot: appState }, '*'); }
       } catch (e) {}
       refreshHeaderUI();
       renderLeaderboardTable();
